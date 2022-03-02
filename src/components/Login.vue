@@ -85,10 +85,11 @@ module.exports = {
                     }
 
                     this.$cookies.set("Authorization", response.data.token)
-                    //this.mycomponent = "apps"
+                    this.mycomponent = "apps"
+                    location.reload()
                     
                 } else {
-                  // this.mycomponent = "login"
+                  this.mycomponent = "login"
                 }
 
             })

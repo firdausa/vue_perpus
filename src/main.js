@@ -32,24 +32,34 @@ var app = new Vue({
           name: "",
           username: "",
       },
-      mycomponent: "login",
+      mycomponent: "",
     },
     router: routers,
     methods: {
         CekToken: function(){
+            //punya token di cookies apa tidak?
+            if(this.$cookies.isKey('Authorization')){
+                //kalau punya
+                //maping header token dulu
+                let token = {
+                    headers : { "Authorization" : "Bearer " + this.$cookies.get("Authorization")}
+                }
+                //cek kevalidan token di backend
+                axios.get(api_url + '/login_check', token)
+                .then( response => {
+                    if(response.data.status === 1){
 
-            //this.mycomponent = "login";
+                        this.mycomponent = 'apps'
+                    } else {
+                        this.mycomponent = 'login'
+                    }
+                })
 
-            //cek token
-
-            // if(... === true){
-            //     this.mycomponent = "apps";
-            //     this.role = response.data.data.role;
-            //     this.name = response.data.data.name;
-
-            // } else {
-            //     this.mycomponent = "login";
-            // }
+            } else {
+                //kalau tidak punya
+                this.mycomponent = 'login'
+            }
+            
         }
     },
     mounted(){
