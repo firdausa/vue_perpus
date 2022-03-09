@@ -23,7 +23,7 @@ var app = new Vue({
     el: "#app", //elemen yang di vue kan
     components: {
         "login": httpVueLoader("./src/components/Login.vue"),
-        "apps" : httpVueLoader("./src/components/App.vue") //belum jadi
+        "apps" : httpVueLoader("./src/components/App.vue")
     },
     data: { //state /variabel global
       user: {
