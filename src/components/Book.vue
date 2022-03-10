@@ -39,8 +39,8 @@
                                 <td>{{ lb.author }}</td>
                                 <td>{{ lb.desc }}</td>
                                 <td>
-                                    <button class="btn btn-info"><i class="fas fa-pencil-alt fa-fw"></i></button>
-                                    <button class="btn btn-danger"><i class="fas fa-trash-alt fa-fw"></i></button>
+                                    <button class="btn btn-info" @click="Edit(lb)" data-bs-toggle="modal" data-bs-target="#book_modal" ><i class="fas fa-pencil-alt fa-fw"></i></button>
+                                    <button class="btn btn-danger" @click="Delete(lb.book_id)"><i class="fas fa-trash-alt fa-fw"></i></button>
                                 </td>
                             </tr>
                         </tbody>
@@ -76,7 +76,7 @@
                     </div>
                     <div class="modal-footer">
                         <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                        <button type="button" class="btn btn-primary" @click="Save()">Submit</button>
+                        <button type="button" class="btn btn-primary" @click="Save()" data-bs-dismiss="modal">Submit</button>
                     </div>
                 </div>
             </div>
@@ -114,6 +114,13 @@ module.exports = {
             this.desc = ""
             this.action = "insert"
         },
+        Edit: function(lb){
+            this.book_id = lb.book_id
+            this.book_name = lb.book_name
+            this.author = lb.author
+            this.desc = lb.desc
+            this.action = "update"
+        },
         Save: function() {
             //mapping header token
             let token = {
@@ -133,15 +140,35 @@ module.exports = {
                 axios.post(api_url + '/Book', form, token)
                 .then( response => {
                     alert(response.data.message)
+                })
+
+            } else { //PUT
+                axios.put(api_url + '/Book/' + this.book_id, form, token)
+                .then( response => {
+                    alert(response.data.message)
+                })
+            }
+
+            this.getData()
+        },
+        Delete: function(book_id){
+            //mapping header token
+            let token = {
+                headers : { "Authorization" : "Bearer " + this.$cookies.get("Authorization")}
+            }
+
+            if(confirm("Apakah anda yakin menghapus data ini?")){
+                
+                axios.delete(api_url + '/Book/' + book_id, token)
+                .then( response => {
+                    alert(response.data.message)
 
                     this.getData()
                 })
 
-            } else { //PUT
-
+            } else {
+                alert("Data tidak jadi dihapus.");
             }
-
-            $("#book_modal").modal('hide');
         }
     },
     mounted() {
