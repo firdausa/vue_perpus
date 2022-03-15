@@ -1,5 +1,6 @@
 //base URL API
 var api_url = "http://localhost:8000/api";
+var api_url2 = "http://localhost:8000";
 
 //konfigurasi route
 var router = [

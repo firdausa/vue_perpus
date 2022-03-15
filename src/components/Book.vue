@@ -19,6 +19,7 @@
                         <thead>
                             <tr>
                                 <th>BOOK ID</th>
+                                <th>COVER</th>
                                 <th>BOOK NAME</th>
                                 <th>AUTHOR</th>
                                 <th>DESC</th>
@@ -27,6 +28,7 @@
                         </thead>
                         <tfoot>
                             <th>BOOK ID</th>
+                            <th>COVER</th>
                             <th>BOOK NAME</th>
                             <th>AUTHOR</th>
                             <th>DESC</th>
@@ -35,10 +37,12 @@
                         <tbody>
                             <tr v-for="lb in list_book" :key="lb">
                                 <td>{{ lb.book_id }}</td>
+                                <td><img :src="api_url2 + '/images/' + lb.image" width="150"></td>
                                 <td>{{ lb.book_name }}</td>
                                 <td>{{ lb.author }}</td>
                                 <td>{{ lb.desc }}</td>
                                 <td>
+                                    <button class="btn btn-default" @click="Edit(lb)" data-bs-toggle="modal" data-bs-target="#bookcover_modal" ><i class="fas fa-image fa-fw"></i></button>
                                     <button class="btn btn-info" @click="Edit(lb)" data-bs-toggle="modal" data-bs-target="#book_modal" ><i class="fas fa-pencil-alt fa-fw"></i></button>
                                     <button class="btn btn-danger" @click="Delete(lb.book_id)"><i class="fas fa-trash-alt fa-fw"></i></button>
                                 </td>
@@ -72,11 +76,33 @@
                             <label for="desc" class="form-label">Description</label>
                             <textarea class="form-control" id="desc" v-model="desc" rows="3"></textarea>
                         </div>
-
                     </div>
                     <div class="modal-footer">
                         <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
                         <button type="button" class="btn btn-primary" @click="Save()" data-bs-dismiss="modal">Submit</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="modal fade" id="bookcover_modal" tabindex="-1" aria-labelledby="staticBackdropLabel" aria-hidden="true">
+            <div class="modal-dialog modal-lg">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="staticBackdropLabel">Book Cover</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body">
+
+                        <div class="mb-3">
+                            <label for="book_cover" class="form-label">Book Cover</label>
+                            <input type="file" class="form-control" id="book_cover" @change="uploadCover($event)">
+                        </div>
+
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                        <button type="button" class="btn btn-primary" @click="Upload(book_id)" data-bs-dismiss="modal">Submit</button>
                     </div>
                 </div>
             </div>
@@ -92,6 +118,7 @@ module.exports = {
             book_name: "",
             author: "",
             desc: "",
+            book_cover: "",
             action: "",
             list_book: [],
         }
@@ -121,10 +148,39 @@ module.exports = {
             this.desc = lb.desc
             this.action = "update"
         },
+        uploadCover: function(e){
+            this.book_cover = e.target.files[0]
+        },
+        Upload: function(id){
+            let token = {
+                headers : { 
+                    "Authorization" : "Bearer " + this.$cookies.get("Authorization"), 
+                    'Content-Type' : 'multipart/form-data',
+                }
+            }
+
+            let form  = new FormData()
+            form.append("book_cover", this.book_cover)
+
+            axios.post(api_url + '/Book/UploadCover/'+ id, form, token)
+            .then( response => {
+                Swal.fire({
+                    title: 'Success!',
+                    text: response.data.message,
+                    icon: 'success',
+                    confirmButtonText: 'OK'
+                })
+
+                this.getData()
+            })
+
+        },
         Save: function() {
             //mapping header token
             let token = {
-                headers : { "Authorization" : "Bearer " + this.$cookies.get("Authorization")}
+                headers : { 
+                    "Authorization" : "Bearer " + this.$cookies.get("Authorization")
+                }
             }
 
             //mapping data
@@ -132,20 +188,31 @@ module.exports = {
                 //backend       //state
                 'book_name': this.book_name,
                 'author': this.author,
-                'desc': this.desc
+                'desc': this.desc,
+                'book_cover' : this.book_cover
             }
 
             if(this.action === 'insert'){ //POST
 
                 axios.post(api_url + '/Book', form, token)
                 .then( response => {
-                    alert(response.data.message)
+                   Swal.fire({
+                        title: 'Success!',
+                        text: response.data.message,
+                        icon: 'success',
+                        confirmButtonText: 'OK'
+                    })
                 })
 
             } else { //PUT
                 axios.put(api_url + '/Book/' + this.book_id, form, token)
                 .then( response => {
-                    alert(response.data.message)
+                    Swal.fire({
+                        title: 'Success!',
+                        text: response.data.message,
+                        icon: 'success',
+                        confirmButtonText: 'OK'
+                    })
                 })
             }
 
@@ -157,18 +224,40 @@ module.exports = {
                 headers : { "Authorization" : "Bearer " + this.$cookies.get("Authorization")}
             }
 
-            if(confirm("Apakah anda yakin menghapus data ini?")){
-                
-                axios.delete(api_url + '/Book/' + book_id, token)
-                .then( response => {
-                    alert(response.data.message)
+            Swal.fire({
+                title: 'Hapus Data Buku',
+                text: 'Apakah anda yakin menghapus data ini?',
+                icon: 'warning',
+                showDenyButton: true,
+                showCancelButton: false,
+                confirmButtonText: 'Ya',
+                denyButtonText: `Tidak`,
+            }).then((result) => {
+                if (result.isConfirmed) {
+                     axios.delete(api_url + '/Book/' + book_id, token)
+                    .then( response => {
 
-                    this.getData()
-                })
+                        Swal.fire({
+                            title: 'Success!',
+                            text: response.data.message,
+                            icon: 'success',
+                            confirmButtonText: 'OK'
+                        })
 
-            } else {
-                alert("Data tidak jadi dihapus.");
-            }
+                        this.getData()
+                    })
+
+                    //Swal.fire('Saved!', '', 'success')
+                } else if (result.isDenied) {
+                    Swal.fire({
+                        title: 'Batal!',
+                        text: 'Data tidak jadi dihapus',
+                        icon: 'error',
+                        confirmButtonText: 'OK'
+                    })
+                }
+            })
+
         }
     },
     mounted() {
